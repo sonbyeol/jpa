@@ -1,0 +1,79 @@
+@Entity
+@Table(name = "adapter")
+public class Adapter {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long adapterId;
+
+    private String name;
+
+    // One-to-many relationship with Interface entity
+    @OneToMany(mappedBy = "adapter", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Interface> interfaces;
+
+    // getters and setters, constructors
+}
+
+@Entity
+@Table(name = "interface")
+public class Interface {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long interfaceId;
+
+    private String name;
+
+    @ManyToOne
+    @JoinColumn(name = "adapter_id")
+    private Adapter adapter;
+
+    // One-to-many relationship with Properties entity
+    @OneToMany(mappedBy = "interface", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Properties> propertiesList;
+
+    // getters and setters, constructors
+}
+
+@Entity
+@Table(name = "properties")
+public class Properties {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long propertiesId;
+
+    private String key;
+    private String value;
+
+    @ManyToOne
+    @JoinColumn(name = "interface_id")
+    private Interface interface;
+
+    // getters and setters, constructors
+}
+
+public void deleteAdapter(Long adapterId) {
+        Adapter adapter = adapterRepository.findById(adapterId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid adapter ID"));
+
+        // Check if there are related interfaces
+        if (!adapter.getInterfaces().isEmpty()) {
+            throw new RuntimeException("Cannot delete adapter with related interfaces");
+        }
+
+        adapterRepository.delete(adapter);
+    }
+	
+	public void deleteInterface(Long interfaceId) {
+        Interface interfaceObj = interfaceRepository.findById(interfaceId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid interface ID"));
+
+        // Check if there are related properties
+        if (!interfaceObj.getPropertiesList().isEmpty()) {
+            throw new RuntimeException("Cannot delete interface with related properties");
+        }
+
+        interfaceRepository.delete(interfaceObj);
+    }
